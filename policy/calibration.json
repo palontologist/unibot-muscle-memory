@@ -1,0 +1,194 @@
+{
+ "_comment": "Per-task gripper contact calibration. Derived by scripts/calibrate_contact.py; held_width is the median measured opening the jaws stall at during a real grasp.",
+ "tasks": {
+  "G1_Dex1_ArrangeTestTubes": {
+   "close_cmd_max": 0.5,
+   "frames": 535169,
+   "gap_on": 0.15,
+   "grasp_events": 0,
+   "grasped_frame_frac": 0.0
+  },
+  "G1_Dex1_ConveyorSorting": {
+   "close_cmd_max": 0.5,
+   "frames": 383721,
+   "gap_on": 0.15,
+   "grasp_events": 9,
+   "grasped_frame_frac": 0.00112,
+   "held_width": 0.172,
+   "held_width_iqr": 0.0687,
+   "held_width_max": 0.3169,
+   "held_width_min": 0.1613,
+   "width_repeatable": true
+  },
+  "G1_Dex1_DisconnectEthernet": {
+   "close_cmd_max": 0.5,
+   "frames": 323878,
+   "gap_on": 0.15,
+   "grasp_events": 268,
+   "grasped_frame_frac": 0.1254,
+   "held_width": 0.9823,
+   "held_width_iqr": 0.0246,
+   "held_width_max": 0.9997,
+   "held_width_min": 0.8882,
+   "width_repeatable": true
+  },
+  "G1_Dex1_FruitCollection": {
+   "close_cmd_max": 0.5,
+   "frames": 340701,
+   "gap_on": 0.15,
+   "grasp_events": 74,
+   "grasped_frame_frac": 0.00541,
+   "held_width": 0.7924,
+   "held_width_iqr": 0.2859,
+   "held_width_max": 0.9964,
+   "held_width_min": 0.1939,
+   "width_repeatable": false
+  },
+  "G1_Dex1_FruitSorting": {
+   "close_cmd_max": 0.5,
+   "frames": 330023,
+   "gap_on": 0.15,
+   "grasp_events": 22,
+   "grasped_frame_frac": 0.00181,
+   "held_width": 0.634,
+   "held_width_iqr": 0.1639,
+   "held_width_max": 0.9635,
+   "held_width_min": 0.185,
+   "width_repeatable": false
+  },
+  "G1_Dex1_HangCup": {
+   "close_cmd_max": 0.5,
+   "frames": 194564,
+   "gap_on": 0.15,
+   "grasp_events": 2,
+   "grasped_frame_frac": 0.00033,
+   "held_width": 0.3042,
+   "held_width_iqr": 0.0089,
+   "held_width_max": 0.3131,
+   "held_width_min": 0.2953,
+   "width_repeatable": true
+  },
+  "G1_Dex1_OrganizeBookshelf": {
+   "close_cmd_max": 0.5,
+   "frames": 316651,
+   "gap_on": 0.15,
+   "grasp_events": 895,
+   "grasped_frame_frac": 0.17287,
+   "held_width": 0.4265,
+   "held_width_iqr": 0.374,
+   "held_width_max": 0.9997,
+   "held_width_min": 0.1732,
+   "width_repeatable": false
+  },
+  "G1_Dex1_PackBag": {
+   "close_cmd_max": 0.5,
+   "frames": 483831,
+   "gap_on": 0.15,
+   "grasp_events": 453,
+   "grasped_frame_frac": 0.03245,
+   "held_width": 0.6301,
+   "held_width_iqr": 0.2667,
+   "held_width_max": 0.9902,
+   "held_width_min": 0.1772,
+   "width_repeatable": false
+  },
+  "G1_Dex1_PaperCupStacking": {
+   "close_cmd_max": 0.5,
+   "frames": 402646,
+   "gap_on": 0.15,
+   "grasp_events": 0,
+   "grasped_frame_frac": 0.0
+  },
+  "G1_Dex1_PickOutBatteries": {
+   "close_cmd_max": 0.5,
+   "frames": 479925,
+   "gap_on": 0.15,
+   "grasp_events": 20,
+   "grasped_frame_frac": 0.00126,
+   "held_width": 0.5249,
+   "held_width_iqr": 0.0183,
+   "held_width_max": 0.8559,
+   "held_width_min": 0.4868,
+   "width_repeatable": true
+  },
+  "G1_Dex1_PlacePhotoFrame": {
+   "close_cmd_max": 0.5,
+   "frames": 348459,
+   "gap_on": 0.15,
+   "grasp_events": 0,
+   "grasped_frame_frac": 0.0
+  },
+  "G1_Dex1_PlugCharger": {
+   "close_cmd_max": 0.5,
+   "frames": 463451,
+   "gap_on": 0.15,
+   "grasp_events": 205,
+   "grasped_frame_frac": 0.00636,
+   "held_width": 0.2606,
+   "held_width_iqr": 0.0252,
+   "held_width_max": 0.3085,
+   "held_width_min": 0.2025,
+   "width_repeatable": true
+  },
+  "G1_Dex1_PlugInEthernet": {
+   "close_cmd_max": 0.5,
+   "frames": 496037,
+   "gap_on": 0.15,
+   "grasp_events": 1302,
+   "grasped_frame_frac": 0.19339,
+   "held_width": 0.5721,
+   "held_width_iqr": 0.1445,
+   "held_width_max": 0.9996,
+   "held_width_min": 0.2488,
+   "width_repeatable": false
+  },
+  "G1_Dex1_StackBowls": {
+   "close_cmd_max": 0.5,
+   "frames": 295609,
+   "gap_on": 0.15,
+   "grasp_events": 696,
+   "grasped_frame_frac": 0.05666,
+   "held_width": 0.2828,
+   "held_width_iqr": 0.0774,
+   "held_width_max": 0.5573,
+   "held_width_min": 0.1641,
+   "width_repeatable": true
+  },
+  "G1_Dex1_SyringeWaterTransfer": {
+   "close_cmd_max": 0.5,
+   "frames": 474353,
+   "gap_on": 0.15,
+   "grasp_events": 841,
+   "grasped_frame_frac": 0.07903,
+   "held_width": 0.3346,
+   "held_width_iqr": 0.1156,
+   "held_width_max": 0.8753,
+   "held_width_min": 0.1501,
+   "width_repeatable": true
+  },
+  "G1_Dex1_Unlock": {
+   "close_cmd_max": 0.5,
+   "frames": 420522,
+   "gap_on": 0.15,
+   "grasp_events": 472,
+   "grasped_frame_frac": 0.12154,
+   "held_width": 0.5001,
+   "held_width_iqr": 0.0534,
+   "held_width_max": 0.9455,
+   "held_width_min": 0.3248,
+   "width_repeatable": true
+  },
+  "G1_Dex1_ZipUp": {
+   "close_cmd_max": 0.5,
+   "frames": 426552,
+   "gap_on": 0.15,
+   "grasp_events": 1341,
+   "grasped_frame_frac": 0.31611,
+   "held_width": 0.23,
+   "held_width_iqr": 0.0315,
+   "held_width_max": 0.6498,
+   "held_width_min": 0.1552,
+   "width_repeatable": true
+  }
+ }
+}

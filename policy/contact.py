@@ -78,6 +78,7 @@ class GripperContact:
     settle_eps: float = DEFAULT_SETTLE_EPS
     settle_frames: int = DEFAULT_SETTLE_FRAMES
     hold_frames: int = DEFAULT_HOLD_FRAMES
+    max_stall_width: float | None = None
 
     _recent: list = field(default_factory=list, repr=False)
     _stall_run: int = 0
@@ -102,6 +103,11 @@ class GripperContact:
         # transient the jaws lag the command, which is actuator dynamics and not
         # contact.
         stalled = closing and settled and gap > self.gap_on
+        # A stall only means contact if the jaws are actually near shut. When the
+        # measured opening is still wide the gripper simply has not moved yet,
+        # which looks like a huge positive gap and must not be read as an object.
+        if stalled and self.max_stall_width is not None and measured > self.max_stall_width:
+            stalled = False
         if stalled:
             self._stall_run += 1
         else:
@@ -113,6 +119,8 @@ class GripperContact:
         # object.
         if self.state.grasped:
             grasped = closing and gap > self.gap_off
+            if grasped and self.max_stall_width is not None and measured > self.max_stall_width:
+                grasped = False
         else:
             grasped = self._stall_run >= self.hold_frames
 

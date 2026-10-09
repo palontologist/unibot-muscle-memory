@@ -52,6 +52,7 @@ class MuscleMemorySubmission:
         self._instruction: str | None = None
         self.use_contact_supervisor = os.environ.get(
             "UNIBOT_CONTACT_SUPERVISOR", "1") not in ("0", "false", "False")
+        self._frozen: np.ndarray | None = None
 
     @property
     def metadata(self):
@@ -113,11 +114,21 @@ class MuscleMemorySubmission:
         instruction = obs["observation.language"]
         supervisor = self._ensure_supervisor(instruction)
 
-        chunk, confidence = self.model(self._language(instruction),
-                                       self._proprio(obs))
-        a = chunk[0].numpy()
-        a = a * self.stats["action_std"][None] + self.stats["action_mean"][None]
-        a = np.nan_to_num(a, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
+        # While a close is in flight the gripper is changing proprioception every
+        # frame, and a fresh policy step reacts to that by withdrawing the arm
+        # before the jaws have closed. The close is a reflex -- hold the arms and
+        # let the jaws finish.
+        hold_arms = supervisor is not None and supervisor.close_active and self._frozen is not None
+
+        if hold_arms:
+            a = self._frozen.copy()
+        else:
+            chunk, confidence = self.model(self._language(instruction),
+                                           self._proprio(obs))
+            a = chunk[0].numpy()
+            a = a * self.stats["action_std"][None] + self.stats["action_mean"][None]
+            a = np.nan_to_num(a, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
+            self._frozen = a.copy()
 
         T = self.CHUNK
         # action.pivot is the shared lower-body target. The training demos are
@@ -152,12 +163,14 @@ class MuscleMemorySubmission:
             )
         action["action.left_arm"] = np.ascontiguousarray(a[:, 0:7])
         action["action.right_arm"] = np.ascontiguousarray(a[:, 7:14])
-        self.last_confidence = float(confidence)
+        if not hold_arms:
+            self.last_confidence = float(confidence)
         return action
 
     def reset(self):
         self._lang_cache.clear()
         self.last_confidence = 0.0
+        self._frozen = None
         self._supervisor = None
         self._supervisor_task = None
         self._instruction = None

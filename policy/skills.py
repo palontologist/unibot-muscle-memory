@@ -301,13 +301,16 @@ class GraspSupervisor:
     verify_frames: int = 20
     retract_frames: int = 10
     max_recoveries: int = 2
+    max_close_frames: int = 120
 
     _contact: GripperContact = field(default_factory=GripperContact, init=False)
     _closing_run: int = field(default=0, init=False)
     _retract_run: int = field(default=0, init=False)
+    _held: bool = field(default=False, init=False)
     recoveries: int = field(default=0, init=False)
     successes: int = field(default=0, init=False)
     failures: int = field(default=0, init=False)
+    releases: int = field(default=0, init=False)
 
     def __post_init__(self):
         if self.calib is not None:
@@ -322,6 +325,24 @@ class GraspSupervisor:
     def intervening(self) -> bool:
         return self._retract_run > 0
 
+    @property
+    def close_active(self) -> bool:
+        """A close is commanded and has not yet resolved.
+
+        The close is a reflex, not a decision: the jaws stall on the object in a
+        few hundred milliseconds and contact is confirmed by reading the opening
+        back. The policy should not be re-run while this holds -- it is
+        conditioned on proprioception that the closing gripper is continuously
+        changing, so a fresh policy step mid-close tends to start withdrawing the
+        arm before contact is made. Callers use this to hold the arm targets.
+        """
+        return self._closing_run > 0 and not self._held
+
+    @property
+    def holding(self) -> bool:
+        """Verified grasp, jaws commanded shut, awaiting a release decision."""
+        return self._held
+
     def step(self, bc_gripper_cmd: float, measured: float) -> float:
         """Return the gripper command to emit for this control step."""
         calibrated = self.calib is not None
@@ -330,6 +351,18 @@ class GraspSupervisor:
         gap_on = self.calib.gap_on if calibrated else 0.15
         gap_off = self.calib.gap_off if calibrated else 0.08
         self._contact.max_stall_width = ceiling
+
+        # Holding a verified grasp. The brain decides when to open -- after the
+        # lift and the hang -- so keep the jaws shut and let the policy run the
+        # arms. Without this latch the frozen chunk keeps commanding a close,
+        # which re-enters CLOSING every step and the arms never resume.
+        if self._held:
+            if bc_gripper_cmd > close_max:
+                self._held = False
+                self._contact.reset()
+                self.successes = max(self.successes - 1, 0)
+                self.releases += 1
+            return bc_gripper_cmd
 
         if self._retract_run > 0:
             self._retract_run -= 1
@@ -348,9 +381,11 @@ class GraspSupervisor:
         st = self._contact.update(bc_gripper_cmd, measured)
         if st.grasped and (not calibrated or self.calib.width_ok(st.width)):
             self.successes += 1
+            self._held = True
+            self._closing_run = 0
             return bc_gripper_cmd
 
-        if self._closing_run >= self.verify_frames:
+        if self._closing_run >= max(self.verify_frames, self.max_close_frames):
             if self.recoveries < self.max_recoveries:
                 self.recoveries += 1
                 self.failures += 1
@@ -368,4 +403,6 @@ class GraspSupervisor:
             "recoveries": self.recoveries,
             "successes": self.successes,
             "failures": self.failures,
+            "releases": self.releases,
+            "holding": self._held,
         }

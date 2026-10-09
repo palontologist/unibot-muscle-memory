@@ -1,3 +1,23 @@
+# UniBot-V1 Submission — muscle-memory-17t
+
+> **This repository is a submission built on the official UniBot-V1 template.**
+> Sections 1–6 below are the template's specification, unmodified, describing the
+> policy interface, data formats and workflow. They are reproduced from
+> [`unitreerobotics/unibot_submission`](https://github.com/unitreerobotics/unibot_submission).
+>
+> **Our policy, its training data and results are documented in [MODEL.md](MODEL.md).**
+> In brief: a looped-transformer motor policy (800,513 params), trained by
+> behavior cloning on 17 of the 32 challenge task datasets, served one process
+> per robot port via `run_server.py`. It is **proprioception + language only —
+> no vision** — so expect low success rate.
+>
+> ```bash
+> pip install -r requirements.txt
+> UNIBOT_SUBMISSION_TOKEN=<token> UNIBOT_CONTROL_SPACE=joint python run_server.py <N>
+> ```
+>
+> ---
+
 # UniBot-V1 Challenge — Submission Template
 
 > 中文版见 [README.zh.md](README.zh.md).

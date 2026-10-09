@@ -3,3 +3,6 @@ numpy
 msgpack
 websockets>=13.0  # needs the websockets.asyncio.server API (added in 13.0)
 Pillow             # imported as PIL in policy/web_policy.py to JPEG-encode/decode camera frames
+
+# Muscle Memory policy runtime (CPU inference, ~3 ms per action chunk)
+torch>=2.0

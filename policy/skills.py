@@ -66,6 +66,7 @@ class TaskCalibration:
     held_width_iqr: float | None = None
     grasp_events: int = 0
     width_repeatable: bool = False
+    phrases: list = field(default_factory=list)
 
     @property
     def calibrated(self) -> bool:
@@ -126,6 +127,7 @@ def load_calibration(path: str | Path | None = None) -> dict[str, TaskCalibratio
             held_width_iqr=row.get("held_width_iqr"),
             grasp_events=row.get("grasp_events", 0),
             width_repeatable=bool(row.get("width_repeatable", False)),
+            phrases=row.get("phrases", []),
         )
     return out
 
@@ -252,4 +254,118 @@ class GraspSkill:
             "rejected_width": self._rejections,
             "held_width": self._last_width,
             "classified": self.calib.classify(self._last_width),
+        }
+
+
+def resolve_task(instruction: str, calibration: dict[str, TaskCalibration]) -> TaskCalibration | None:
+    """Map an instruction string to a task's calibration.
+
+    Inference only receives the instruction, never a task id, so the known
+    phrasing is matched on distinctive words. Returns None when nothing matches,
+    which is not an error: the supervisor then runs unsupervised and can still
+    detect that a close failed, just not grade the width.
+    """
+    words = {w for w in "".join(c if c.isalnum() else " " for c in instruction.lower()).split()
+             if len(w) > 3}
+    if not words:
+        return None
+    best, best_score = None, 0
+    for name, calib in calibration.items():
+        for phrase in calib.phrases:
+            pw = {w for w in "".join(c if c.isalnum() else " " for c in phrase.lower()).split()
+                  if len(w) > 3}
+            if not pw:
+                continue
+            score = len(words & pw) / len(pw)
+            if score > best_score:
+                best, best_score = calib, score
+    return best if best_score >= 0.5 else None
+
+
+@dataclass
+class GraspSupervisor:
+    """Watches the BC policy's gripper and intervenes only when a close fails.
+
+    This is deliberately additive. The BC policy's gripper command is passed
+    through untouched whenever the grasp succeeds, so behaviour on a working
+    episode is identical to serving the raw policy. Only when a close command
+    produces no contact for `verify_frames` does the supervisor retract the jaws
+    and hand control back, which is the case that previously continued into the
+    next skill with an empty gripper.
+
+    It does not re-aim the arm: retargeting needs a simulator, so the retry
+    re-runs the policy from the retracted state.
+    """
+
+    calib: TaskCalibration | None
+    verify_frames: int = 20
+    retract_frames: int = 10
+    max_recoveries: int = 2
+
+    _contact: GripperContact = field(default_factory=GripperContact, init=False)
+    _closing_run: int = field(default=0, init=False)
+    _retract_run: int = field(default=0, init=False)
+    recoveries: int = field(default=0, init=False)
+    successes: int = field(default=0, init=False)
+    failures: int = field(default=0, init=False)
+
+    def __post_init__(self):
+        if self.calib is not None:
+            self._contact = GripperContact(
+                close_cmd_max=self.calib.close_cmd_max,
+                gap_on=self.calib.gap_on,
+                gap_off=self.calib.gap_off,
+                max_stall_width=self.calib.max_stall_width,
+            )
+
+    @property
+    def intervening(self) -> bool:
+        return self._retract_run > 0
+
+    def step(self, bc_gripper_cmd: float, measured: float) -> float:
+        """Return the gripper command to emit for this control step."""
+        calibrated = self.calib is not None
+        ceiling = self.calib.max_stall_width if calibrated else DEFAULT_MAX_STALL_WIDTH
+        close_max = self.calib.close_cmd_max if calibrated else 0.5
+        gap_on = self.calib.gap_on if calibrated else 0.15
+        gap_off = self.calib.gap_off if calibrated else 0.08
+        self._contact.max_stall_width = ceiling
+
+        if self._retract_run > 0:
+            self._retract_run -= 1
+            if self._retract_run == 0:
+                self._closing_run = 0
+                self._contact.reset()
+            return (self.calib.approach_width if calibrated
+                    else close_max + APPROACH_MARGIN)
+
+        if bc_gripper_cmd > close_max:
+            self._closing_run = 0
+            self._contact.reset()
+            return bc_gripper_cmd
+
+        self._closing_run += 1
+        st = self._contact.update(bc_gripper_cmd, measured)
+        if st.grasped and (not calibrated or self.calib.width_ok(st.width)):
+            self.successes += 1
+            return bc_gripper_cmd
+
+        if self._closing_run >= self.verify_frames:
+            if self.recoveries < self.max_recoveries:
+                self.recoveries += 1
+                self.failures += 1
+                self._retract_run = self.retract_frames
+                self._closing_run = 0
+                self._contact.reset()
+                return (self.calib.approach_width if calibrated
+                        else close_max + APPROACH_MARGIN)
+        return bc_gripper_cmd
+
+    def summary(self) -> dict:
+        return {
+            "task": self.calib.name if self.calib else None,
+            "calibrated": bool(self.calib and self.calib.calibrated),
+            "recoveries": self.recoveries,
+            "successes": self.successes,
+            "failures": self.failures,
         }

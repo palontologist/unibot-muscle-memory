@@ -17,6 +17,7 @@ import numpy as np
 import torch
 
 from .muscle_memory import MuscleMemoryPolicy, hash_tokens
+from .skills import GraspSupervisor, load_calibration, resolve_task
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_CKPT = HERE.parent / "checkpoints" / "muscle_memory_challenge.pt"
@@ -45,6 +46,12 @@ class MuscleMemorySubmission:
         self.model.eval()
         self._lang_cache: dict[str, list[int]] = {}
         self.last_confidence = 0.0
+        self._calibration = load_calibration()
+        self._supervisor: GraspSupervisor | None = None
+        self._supervisor_task: str | None = None
+        self._instruction: str | None = None
+        self.use_contact_supervisor = os.environ.get(
+            "UNIBOT_CONTACT_SUPERVISOR", "1") not in ("0", "false", "False")
 
     @property
     def metadata(self):
@@ -84,9 +91,29 @@ class MuscleMemorySubmission:
         norm = (state - self.stats["state_mean"][None]) / (self.stats["state_std"][None] + 1e-6)
         return torch.from_numpy(norm.astype(np.float32))[None]
 
+    def _ensure_supervisor(self, instruction: str) -> GraspSupervisor | None:
+        """Bind a supervisor to the current task's calibration.
+
+        Inference only ever sees the instruction, so the task is resolved from its
+        phrasing. An unresolved task still gets a supervisor -- just one that
+        cannot grade the grasp width, which is enough to notice a close that
+        caught nothing.
+        """
+        if not self.use_contact_supervisor:
+            return None
+        if instruction != self._instruction:
+            self._instruction = instruction
+            calib = resolve_task(instruction, self._calibration)
+            self._supervisor = GraspSupervisor(calib=calib)
+            self._supervisor_task = calib.name if calib else None
+        return self._supervisor
+
     @torch.no_grad()
     def get_action(self, obs: dict) -> dict:
-        chunk, confidence = self.model(self._language(obs["observation.language"]),
+        instruction = obs["observation.language"]
+        supervisor = self._ensure_supervisor(instruction)
+
+        chunk, confidence = self.model(self._language(instruction),
                                        self._proprio(obs))
         a = chunk[0].numpy()
         a = a * self.stats["action_std"][None] + self.stats["action_mean"][None]
@@ -99,10 +126,23 @@ class MuscleMemorySubmission:
         pivot = self.stats.get("pivot_mean")
         pivot = np.zeros(7, np.float32) if pivot is None else np.asarray(pivot, np.float32)
 
+        left_grip = a[:, 14:15]
+        right_grip = a[:, 15:16]
+
+        # The supervisor watches the close the policy commanded against the
+        # opening actually measured, and only overrides when nothing was caught.
+        # When grasps succeed this is a no-op and the chunk is untouched.
+        if supervisor is not None:
+            measured = float(np.asarray(obs["observation.state.left_gripper"],
+                                        dtype=np.float32).reshape(-1)[-1])
+            cmd = supervisor.step(float(left_grip[0, 0]), measured)
+            if supervisor.intervening or cmd != float(left_grip[0, 0]):
+                left_grip = np.tile(np.float32(cmd), (T, 1))
+
         action = {
             "meta.token": self._token,
-            "action.left_gripper": np.ascontiguousarray(a[:, 14:15]),
-            "action.right_gripper": np.ascontiguousarray(a[:, 15:16]),
+            "action.left_gripper": np.ascontiguousarray(left_grip),
+            "action.right_gripper": np.ascontiguousarray(right_grip),
             "action.pivot": np.tile(pivot, (T, 1)).astype(np.float32),
         }
         if self._control_space != "joint":
@@ -118,7 +158,18 @@ class MuscleMemorySubmission:
     def reset(self):
         self._lang_cache.clear()
         self.last_confidence = 0.0
+        self._supervisor = None
+        self._supervisor_task = None
+        self._instruction = None
         return {"ok": True}
+
+    def supervisor_summary(self) -> dict:
+        """Per-episode grasp supervision stats; None when it is disabled."""
+        if not self.use_contact_supervisor:
+            return None
+        s = self._supervisor.summary() if self._supervisor is not None else {}
+        s["intervening"] = bool(self._supervisor and self._supervisor.intervening)
+        return s
 
 
 def main():

@@ -1,12 +1,19 @@
 {
- "_comment": "Per-task gripper contact calibration. Derived by scripts/calibrate_contact.py; held_width is the median measured opening the jaws stall at during a real grasp.",
+ "_comment": "Per-task gripper contact calibration. Derived by scripts/calibrate_contact.py; held_width is the median measured opening the jaws stall at during a real grasp. 'phrases' are the task's instruction variants, used to resolve an instruction string to a task at inference.",
  "tasks": {
   "G1_Dex1_ArrangeTestTubes": {
    "close_cmd_max": 0.5,
    "frames": 535169,
    "gap_on": 0.15,
    "grasp_events": 0,
-   "grasped_frame_frac": 0.0
+   "grasped_frame_frac": 0.0,
+   "phrases": [
+    "Place the test tubes neatly back into the test tube rack",
+    "ArrangeTestTubes",
+    "Pick up test tube 1 and return it to its designated spot in the rack",
+    "Pick up test tube 2 and return it to its designated spot in the rack",
+    "Pick up test tube 3 and return it to its designated spot in the rack"
+   ]
   },
   "G1_Dex1_ConveyorSorting": {
    "close_cmd_max": 0.5,
@@ -18,6 +25,12 @@
    "held_width_iqr": 0.0687,
    "held_width_max": 0.3169,
    "held_width_min": 0.1613,
+   "phrases": [
+    "Pick up the food items moving on the conveyor belt and sort them onto the rack on the right by category",
+    "ConveyorSorting",
+    "Grab the food item on the conveyor belt",
+    "Place it at the position corresponding to its category on the rack"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_DisconnectEthernet": {
@@ -30,6 +43,12 @@
    "held_width_iqr": 0.0246,
    "held_width_max": 0.9997,
    "held_width_min": 0.8882,
+   "phrases": [
+    "Unplug the Ethernet cable from the network port",
+    "DisconnectEthernet",
+    "Hold the network port, then grip the Ethernet cable",
+    "Unplug the Ethernet cable"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_FruitCollection": {
@@ -42,6 +61,12 @@
    "held_width_iqr": 0.2859,
    "held_width_max": 0.9964,
    "held_width_min": 0.1939,
+   "phrases": [
+    "Put all the fruits into the fruit basket",
+    "FruitCollection",
+    "Grab fruit 1 and put it into the basket",
+    "Grab fruit 2 and put it into the basket"
+   ],
    "width_repeatable": false
   },
   "G1_Dex1_FruitSorting": {
@@ -54,6 +79,13 @@
    "held_width_iqr": 0.1639,
    "held_width_max": 0.9635,
    "held_width_min": 0.185,
+   "phrases": [
+    "Place each fruit onto the plate with the matching color",
+    "FruitSorting",
+    "Grab fruit 1 and place it onto the plate with the matching color",
+    "Grab fruit 2 and place it onto the plate with the matching color",
+    "Grab fruit 3 and place it onto the plate with the matching color"
+   ],
    "width_repeatable": false
   },
   "G1_Dex1_HangCup": {
@@ -66,6 +98,12 @@
    "held_width_iqr": 0.0089,
    "held_width_max": 0.3131,
    "held_width_min": 0.2953,
+   "phrases": [
+    "Hang the cup on the marked spot on the cup rack",
+    "HangCup",
+    "Grab the cup handle",
+    "Hang it on the marked spot on the rack"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_OrganizeBookshelf": {
@@ -78,6 +116,12 @@
    "held_width_iqr": 0.374,
    "held_width_max": 0.9997,
    "held_width_min": 0.1732,
+   "phrases": [
+    "Put the top book onto the bookshelf",
+    "OrganizeBookshelf",
+    "Grab the book and pick it up",
+    "Place it on the bookshelf"
+   ],
    "width_repeatable": false
   },
   "G1_Dex1_PackBag": {
@@ -90,6 +134,14 @@
    "held_width_iqr": 0.2667,
    "held_width_max": 0.9902,
    "held_width_min": 0.1772,
+   "phrases": [
+    "Put the pencil case into the backpack and zip it up",
+    "PackBag",
+    "Grab the pencil case",
+    "Grab the backpack and pull it over",
+    "Put the pencil case into the backpack",
+    "Zip up the backpack"
+   ],
    "width_repeatable": false
   },
   "G1_Dex1_PaperCupStacking": {
@@ -97,7 +149,14 @@
    "frames": 402646,
    "gap_on": 0.15,
    "grasp_events": 0,
-   "grasped_frame_frac": 0.0
+   "grasped_frame_frac": 0.0,
+   "phrases": [
+    "Stack the paper cups in front of you with two on the bottom and one on top",
+    "PaperCupStacking",
+    "Place paper cup 1 in the middle",
+    "Place paper cup 2 next to cup 1",
+    "Place paper cup 3 on top of cups 1 and 2"
+   ]
   },
   "G1_Dex1_PickOutBatteries": {
    "close_cmd_max": 0.5,
@@ -109,6 +168,13 @@
    "held_width_iqr": 0.0183,
    "held_width_max": 0.8559,
    "held_width_min": 0.4868,
+   "phrases": [
+    "Pick out the batteries from the blocks and place them into the green box",
+    "PickOutBatteries",
+    "Pick out battery 1 (without grabbing any block)",
+    "Pick out battery 2 (without grabbing any block)",
+    "Pick out battery 3 (without grabbing any block)"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_PlacePhotoFrame": {
@@ -116,7 +182,14 @@
    "frames": 348459,
    "gap_on": 0.15,
    "grasp_events": 0,
-   "grasped_frame_frac": 0.0
+   "grasped_frame_frac": 0.0,
+   "phrases": [
+    "Open the photo frame and place it on the table",
+    "PlacePhotoFrame",
+    "Grab the photo frame",
+    "Open the frame stand",
+    "Straighten the photo frame"
+   ]
   },
   "G1_Dex1_PlugCharger": {
    "close_cmd_max": 0.5,
@@ -128,6 +201,13 @@
    "held_width_iqr": 0.0252,
    "held_width_max": 0.3085,
    "held_width_min": 0.2025,
+   "phrases": [
+    "Position the power strip properly and plug the plug into the first socket",
+    "PlugCharger",
+    "Grab the power strip",
+    "Grab the plug",
+    "Plug it into the power strip"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_PlugInEthernet": {
@@ -140,6 +220,13 @@
    "held_width_iqr": 0.1445,
    "held_width_max": 0.9996,
    "held_width_min": 0.2488,
+   "phrases": [
+    "Plug the Ethernet cable into the network port",
+    "PlugInEthernet",
+    "Grab the ethernet cable",
+    "Hold the network port",
+    "Plug the cable into the network port"
+   ],
    "width_repeatable": false
   },
   "G1_Dex1_StackBowls": {
@@ -152,6 +239,13 @@
    "held_width_iqr": 0.0774,
    "held_width_max": 0.5573,
    "held_width_min": 0.1641,
+   "phrases": [
+    "Stack the three bowls in the order: red, green, blue",
+    "StackBowls",
+    "Place bowl 1 in the middle",
+    "Stack bowl 2 onto bowl 1",
+    "Stack bowl 3 onto bowl 2"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_SyringeWaterTransfer": {
@@ -164,6 +258,12 @@
    "held_width_iqr": 0.1156,
    "held_width_max": 0.8753,
    "held_width_min": 0.1501,
+   "phrases": [
+    "Transfer water from the large cup to the small cup using a syringe",
+    "SyringeWaterTransfer",
+    "Draw water from the large cup using the syringe",
+    "Inject the water into the small cup"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_Unlock": {
@@ -176,6 +276,13 @@
    "held_width_iqr": 0.0534,
    "held_width_max": 0.9455,
    "held_width_min": 0.3248,
+   "phrases": [
+    "Unlock the lock using the key",
+    "Unlock",
+    "Pick up the lock",
+    "Turn the key",
+    "Flip the metal ring"
+   ],
    "width_repeatable": true
   },
   "G1_Dex1_ZipUp": {
@@ -188,6 +295,12 @@
    "held_width_iqr": 0.0315,
    "held_width_max": 0.6498,
    "held_width_min": 0.1552,
+   "phrases": [
+    "Straighten the storage pouch and zip it up",
+    "ZipUp",
+    "Straighten the pouch",
+    "Zip up the pouch"
+   ],
    "width_repeatable": true
   }
  }

@@ -48,6 +48,7 @@ DEFAULT_GAP_OFF = 0.08      # hysteresis, so a held grasp cannot chatter
 DEFAULT_SETTLE_EPS = 0.02   # measured must be steady before the gap is read
 DEFAULT_SETTLE_FRAMES = 3
 DEFAULT_HOLD_FRAMES = 3     # stall must persist this long before "grasped"
+DEFAULT_MIN_HELD_WIDTH = 0.12  # a jaw that shut this narrow closed on nothing
 
 
 @dataclass
@@ -78,6 +79,7 @@ class GripperContact:
     settle_eps: float = DEFAULT_SETTLE_EPS
     settle_frames: int = DEFAULT_SETTLE_FRAMES
     hold_frames: int = DEFAULT_HOLD_FRAMES
+    min_held_width: float = DEFAULT_MIN_HELD_WIDTH
     max_stall_width: float | None = None
 
     _recent: list = field(default_factory=list, repr=False)
@@ -102,10 +104,14 @@ class GripperContact:
         # Only read the gap once the jaws have stopped moving: during the closing
         # transient the jaws lag the command, which is actuator dynamics and not
         # contact.
-        stalled = closing and settled and gap > self.gap_on
-        # A stall only means contact if the jaws are actually near shut. When the
-        # measured opening is still wide the gripper simply has not moved yet,
-        # which looks like a huge positive gap and must not be read as an object.
+        # Contact is a window on the *measured* opening, not a threshold on the gap.
+        # The demonstrator commanded nearly shut, but a policy may command an
+        # intermediate value -- then measured-minus-commanded is small and a gap
+        # threshold misses a real grasp entirely. What actually distinguishes a
+        # grasp is the absolute width the jaws came to rest at: too narrow to
+        # have anything between them, too wide to have arrived yet.
+        stalled = (closing and settled
+                   and measured > self.min_held_width)
         if stalled and self.max_stall_width is not None and measured > self.max_stall_width:
             stalled = False
         if stalled:
@@ -118,7 +124,9 @@ class GripperContact:
         # measured opening must not drop a grasp that is still closed on an
         # object.
         if self.state.grasped:
-            grasped = closing and gap > self.gap_off
+            # Same window, relaxed at the bottom, so a grasp survives a dip
+            # without needing the gap to stay positive.
+            grasped = closing and measured > self.min_held_width * 0.75
             if grasped and self.max_stall_width is not None and measured > self.max_stall_width:
                 grasped = False
         else:
